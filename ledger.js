@@ -8,7 +8,12 @@ module.exports.Ledger = class Ledger {
     }
 
     getGenesisBlock() {
-        var t = new Domain.Transaction(0, 0, 0);
+        var t = {
+            accountTo: 0,
+            accountFrom: 0,
+            amount: 0,
+            timeStamp: "1519600528.245"
+        };
         return this.generateBlock({ index: -1, hash: "0" }, t)
     }
 
@@ -17,10 +22,13 @@ module.exports.Ledger = class Ledger {
     }
 
     addBlock(blockData) {
+        blockData.timeStamp = new Date().getTime() / 1000;
         var newBlock = this.generateNextBlock(blockData);
-        
+
         if (this.isValidNewBlock(newBlock, this.getLatestBlock())) {
             this.chain.push(newBlock);
+        } else {
+            return null;
         }
 
         return newBlock;
@@ -32,19 +40,18 @@ module.exports.Ledger = class Ledger {
     }
 
     generateBlock(previousBlock, blockData) {
-        var nextIndex = previousBlock.index + 1;
-        var nextTimestamp = new Date().getTime() / 1000;
-        var transaction = new Domain.Transaction(blockData.accountTo, blockData.accountFrom, blockData.amount, nextTimestamp)
-        var nextHash = this.calculateHash(nextIndex, previousBlock.hash, nextTimestamp, transaction);
+        var nextIndex = previousBlock.index + 1;        
+        var transaction = new Domain.Transaction(blockData.accountTo, blockData.accountFrom, blockData.amount, blockData.timeStamp)
+        var nextHash = this.calculateHash(nextIndex, previousBlock.hash, transaction);
         return new Domain.Block(nextIndex, previousBlock.hash, transaction, nextHash);
     }
 
     calculateHashForBlock(block) {
-        return this.calculateHash(block.index, block.previousHash, block.timestamp, block.data);
+        return this.calculateHash(block.index, block.previousHash, block.data);
     }
 
-    calculateHash(index, previousHash, timestamp, data) {
-        return CryptoJS.SHA256(index + previousHash + timestamp + data).toString();
+    calculateHash(index, previousHash, data) {        
+        return CryptoJS.SHA256(index + previousHash + data).toString();
     }
 
     isValidNewBlock(newBlock, previousBlock) {
@@ -55,8 +62,7 @@ module.exports.Ledger = class Ledger {
             console.log('invalid previoushash');
             return false;
         } else if (this.calculateHashForBlock(newBlock) !== newBlock.hash) {
-            console.log(typeof(newBlock.hash) + ' ' + typeof calculateHashForBlock(newBlock));
-            console.log('invalid hash: ' + calculateHashForBlock(newBlock) + ' ' + newBlock.hash);
+            console.log('invalid hash: ' + this.calculateHashForBlock(newBlock) + ' ' + newBlock.hash);
             return false;
         }
         return true;
@@ -64,12 +70,13 @@ module.exports.Ledger = class Ledger {
 
     isValidChain(blockchainToValidate) {
         if (JSON.stringify(blockchainToValidate[0]) !== JSON.stringify(this.getGenesisBlock())) {
+            console.log("Invalid getGenesisBlock: " + JSON.stringify(blockchainToValidate[0]) + "----" + JSON.stringify(this.getGenesisBlock()))
             return false;
         }
-        
+
         var tempBlocks = [blockchainToValidate[0]];
         for (var i = 1; i < blockchainToValidate.length; i++) {
-            if (isValidNewBlock(blockchainToValidate[i], tempBlocks[i - 1])) {
+            if (this.isValidNewBlock(blockchainToValidate[i], tempBlocks[i - 1])) {
                 tempBlocks.push(blockchainToValidate[i]);
             } else {
                 return false;
@@ -79,11 +86,15 @@ module.exports.Ledger = class Ledger {
     }
 
     transactions() {
+        console.log(JSON.stringify(this.chain));
+
         return this.chain.map(x => {
             return {
+                index: x.index,
                 accountTo: x.data.accountTo,
                 accountFrom: x.data.accountFrom,
                 amount: x.data.amount,
+                timeStamp: x.data.timeStamp,
                 currency: x.data.currency
             };
         });

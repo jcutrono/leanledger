@@ -8,7 +8,7 @@ var Currency = {
 }
 
 module.exports.Block = class Block {
-    constructor(index, previousHash, timestamp, data, hash) {
+    constructor(index, previousHash, data, hash) {
         this.index = index;
         this.previousHash = previousHash.toString();        
         this.data = data;
