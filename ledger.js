@@ -3,7 +3,8 @@ var CryptoJS = require("crypto-js");
 var Domain = require("./domain.js");
 
 module.exports.Ledger = class Ledger {
-    constructor() {
+    constructor(db) {
+        this.db = db;
         this.chain = [this.getGenesisBlock()]
     }
 
@@ -27,6 +28,10 @@ module.exports.Ledger = class Ledger {
 
         if (this.isValidNewBlock(newBlock, this.getLatestBlock())) {
             this.chain.push(newBlock);
+            
+            var collection = this.db.collection('blocks');
+            collection.insert(this.chain);
+
         } else {
             return null;
         }

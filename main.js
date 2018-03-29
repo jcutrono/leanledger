@@ -6,8 +6,19 @@ var Domain = require("./domain.js");
 var Ledger = require("./ledger.js");
 
 var http_port = process.env.HTTP_PORT || 3001;
+var ledger = {};
 
-var ledger = new Ledger.Ledger();
+var MongoClient = require('mongodb').MongoClient;
+var mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017/leanledger'
+
+// Initialize connection once
+MongoClient.connect(mongoUrl, function(err, database) {
+    if(err) throw err;
+    var leanDB = database.db('leanledger')
+    ledger = new Ledger.Ledger(leanDB);
+    
+    initHttpServer();  
+});
 
 var initHttpServer = () => {
     var app = express();
@@ -51,5 +62,3 @@ var initHttpServer = () => {
 
     app.listen(http_port, () => console.log('Listening http on port: ' + http_port));
 };
-
-initHttpServer();
