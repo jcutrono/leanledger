@@ -1,11 +1,12 @@
 'use strict';
 var CryptoJS = require("crypto-js");
 var Domain = require("./domain.js");
+var DB = require("./database.js");
 
 module.exports.Ledger = class Ledger {
-    constructor(db) {
-        this.db = db;
+    constructor() {
         this.chain = [this.getGenesisBlock()]
+        this.db = new DB.DB();
     }
 
     getGenesisBlock() {
@@ -29,7 +30,7 @@ module.exports.Ledger = class Ledger {
         if (this.isValidNewBlock(newBlock, this.getLatestBlock())) {
             this.chain.push(newBlock);
             
-            var collection = this.db.collection('blocks');
+            var collection = this.db.getCollection('blocks');
             collection.insert(this.chain);
 
         } else {
