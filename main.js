@@ -5,7 +5,7 @@ var HttpStatus = require('http-status-codes');
 var Domain = require("./domain.js");
 var Ledger = require("./ledger.js");
 
-var http_port = process.env.HTTP_PORT || 3001;
+var http_port = process.env.HTTP_PORT || 5000;
 var ledger = new Ledger.Ledger();
 
 var initHttpServer = () => {
