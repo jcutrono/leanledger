@@ -16,21 +16,22 @@ var initHttpServer = () => {
 
     app.post('/blocks', (req, res) => {
         // where req.body is a new Transaction
-        var newBlock = ledger.addBlock(req.body);
-        if (newBlock) {
-            // we could send a socket message here with the latest block
-            // or utilize webhooks to broadcast over http 
-            // broadcast(responseLatestMsg());
+        ledger.addBlock(req.body).then(function(newBlock){
+            if (newBlock) {
+                // we could send a socket message here with the latest block
+                // or utilize webhooks to broadcast over http 
+                // broadcast(responseLatestMsg());
 
-            res
-                .status(HttpStatus.ACCEPTED)
-                .send('New block added: ' + JSON.stringify(newBlock));
-        }
-        else{
-            res
-                .status(HttpStatus.NOT_ACCEPTABLE)
-                .send('Not valid');
-        }
+                res
+                    .status(HttpStatus.ACCEPTED)
+                    .send('New block added: ' + JSON.stringify(newBlock));
+            }
+            else{
+                res
+                    .status(HttpStatus.NOT_ACCEPTABLE)
+                    .send('Not valid');
+            }
+        });
     });
 
     app.post('/validate', (req, res) => {

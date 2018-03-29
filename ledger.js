@@ -24,20 +24,22 @@ module.exports.Ledger = class Ledger {
     }
 
     addBlock(blockData) {
-        blockData.timeStamp = new Date().getTime() / 1000;
-        var newBlock = this.generateNextBlock(blockData);
+        var self = this;
+        return new Promise(function(resolve, reject){
+            blockData.timeStamp = new Date().getTime() / 1000;
+            var newBlock = self.generateNextBlock(blockData);
 
-        if (this.isValidNewBlock(newBlock, this.getLatestBlock())) {
-            this.chain.push(newBlock);
-            
-            var collection = this.db.getCollection('blocks');
-            collection.insert(this.chain);
-
-        } else {
-            return null;
-        }
-
-        return newBlock;
+            if (self.isValidNewBlock(newBlock, self.getLatestBlock())) {
+                self.chain.push(newBlock);
+                
+                var collection = self.db.getCollection('blocks').then(function(collection){
+                    collection.insert(self.chain);
+                    resolve(newBlock);
+                });
+            } else {
+                resolve(null);
+            }
+        });        
     }
 
     generateNextBlock(blockData) {
